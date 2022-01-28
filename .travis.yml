@@ -1,0 +1,23 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t jeetondocker/react-test -f ./client/dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true jeetondocker/react-test npm test
+
+after_success:
+  - docker build -t jeetondocker/multi-client ./client
+  - docker built -t jeetondocker/multi-nginx ./nginx
+  - docker built -t jeetondocker/multi-server ./server
+  - docker built -t jeetondocker/multi-worker ./worker
+  # log in to the docker CI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # take those images and push to dockerhub
+  - docker push jeetondocker/multi-client
+  - docker push jeetondocker/multi-nginx
+  - docker push jeetondocker/multi-server
+  - docker push jeetondocker/multi-worker
+
